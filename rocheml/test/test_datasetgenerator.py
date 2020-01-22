@@ -1,18 +1,20 @@
 import unittest
 from datasetio.datasetwriter import DatasetWriter
+from datasetio.datasetgenerator import DatasetGenerator
 import h5py
 import os
 import numpy as np
 import string
 import random
+import math
 
 
-class TestDatasetWriter(unittest.TestCase):
+class TestDatasetGenerator(unittest.TestCase):
     def setUp(self):
-        self.feat_length = 32
-        self.seq_length = 10
+        self.feat_length = 5
+        self.seq_length = 5
         self.buffer_size = 5
-        self.num_rows = 100
+        self.num_rows = 50
         self.dataset_file_path = 'test.hdf'
 
         self.cols = [
@@ -65,39 +67,26 @@ class TestDatasetWriter(unittest.TestCase):
 
         return {'feat_seq': features, 'label': label, 'file': file}
 
-    def check_db(self, expected_rows):
-        db = h5py.File(self.dataset_file_path, 'r')
-        for col in self.cols:
-            for expected_row, db_value in zip(expected_rows, db[col['name']]):
-                if col['name'] == 'feat_seq':
-                    self.assertEqual(expected_row[col['name']].tolist(),
-                                     db_value.tolist())
-                else:
-                    self.assertEqual(expected_row[col['name']], db_value)
+    def check_db(self, batch_size, expected_rows, shuffle):
+        gen = DatasetGenerator(self.dataset_file_path,
+                               batch_size,
+                               'feat_seq',
+                               binarize=False,
+                               shuffle=shuffle)
+        gen_features = []
+        gen_labels = []
+        for features, labels in gen.generator(1):
+            gen_features.extend(features.tolist())
+            gen_labels.extend(labels.tolist())
 
-    def test_empty(self):
-        expected_rows = self.initialize_expected_rows()
-        self.check_db(expected_rows)
+        self.assertEqual(len(expected_rows), len(gen_labels))
 
-    def test_add_one_less_than_buffer_size(self):
-        expected_rows = self.initialize_expected_rows()
-        for i in range(0, self.buffer_size - 1):
-            row = self.generate_random_row()
-            expected_rows[i] = row
-            self.dataset_writer.add(row)
-        self.dataset_writer.close()
-
-        self.check_db(expected_rows)
-
-    def test_add_one_more_than_buffer_size(self):
-        expected_rows = self.initialize_expected_rows()
-        for i in range(0, self.buffer_size + 1):
-            row = self.generate_random_row()
-            expected_rows[i] = row
-            self.dataset_writer.add(row)
-        self.dataset_writer.close()
-
-        self.check_db(expected_rows)
+        for gen_label, gen_features in zip(gen_labels, gen_features):
+            result = [
+                row for row in expected_rows if row['label'] == gen_label[0]
+                and np.array_equal(row['feat_seq'], gen_features)
+            ]
+            self.assertTrue(result)
 
     def test_full(self):
         expected_rows = self.initialize_expected_rows()
@@ -107,7 +96,19 @@ class TestDatasetWriter(unittest.TestCase):
             self.dataset_writer.add(row)
         self.dataset_writer.close()
 
-        self.check_db(expected_rows)
+        batch_size = 3
+        self.check_db(batch_size, expected_rows, False)
+
+    def test_full_shuffle(self):
+        expected_rows = self.initialize_expected_rows()
+        for i in range(0, self.num_rows):
+            row = self.generate_random_row()
+            expected_rows[i] = row
+            self.dataset_writer.add(row)
+        self.dataset_writer.close()
+
+        batch_size = 3
+        self.check_db(batch_size, expected_rows, True)
 
 
 if __name__ == '__main__':
