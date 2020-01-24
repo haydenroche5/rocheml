@@ -1,4 +1,4 @@
-from keras.applications.inception_v3 import preprocess_input
+from tensorflow.keras.applications.inception_v3 import preprocess_input
 
 
 class InceptionV3Preprocessor:
