@@ -45,7 +45,6 @@ class DatasetWriter:
                 num_rows = len(self.buffer)
                 curr_idx = self.dataset_idxs[col_name]
                 new_idx = self.dataset_idxs[col_name] + num_rows
-
                 for i, row in enumerate(self.buffer):
                     self.datasets[col_name][curr_idx + i] = row[col_name]
 
