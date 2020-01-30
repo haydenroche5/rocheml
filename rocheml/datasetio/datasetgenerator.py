@@ -30,6 +30,10 @@ class DatasetGenerator:
         self.db = h5py.File(db_file_path, "r")
         self.num_features = self.db['label'].shape[0]
 
+        self.idxs = np.arange(0, self.num_features, self.batch_size)
+        if self.shuffle:
+            np.random.shuffle(self.idxs)
+
     def generator(self, passes=np.inf):
         # initialize the epoch count
         epochs = 0
@@ -38,18 +42,8 @@ class DatasetGenerator:
         # reach the desired number of epochs
         while epochs < passes:
             # loop over the HDF5 dataset
-            idxs = np.arange(0, self.num_features, self.batch_size)
-            chosen_idxs = set()
-            for i in np.arange(0, self.num_features, self.batch_size):
+            for idx in self.idxs:
                 # extract the features and labels from the HDF dataset
-
-                idx = i
-                if self.shuffle:
-                    idx = np.random.choice(idxs)
-                    while idx in chosen_idxs:
-                        idx = np.random.choice(idxs)
-                        chosen_idxs.add(idx)
-
                 features = self.db[self.feat_key][idx:idx + self.batch_size]
                 labels = self.db['label'][idx:idx + self.batch_size]
 
@@ -87,6 +81,8 @@ class DatasetGenerator:
                 yield (features, labels)
             # increment the total number of epochs
             epochs += 1
+            if self.shuffle:
+                np.random.shuffle(self.idxs)
 
     def close(self):
         # close the database
