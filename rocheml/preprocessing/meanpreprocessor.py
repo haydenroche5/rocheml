@@ -11,15 +11,19 @@ class MeanPreprocessor:
         self.g_mean = g_mean
         self.b_mean = b_mean
 
-    def preprocess(self, image):
+    def preprocess(self, seq):
         # split the image into its respective Red, Green, and Blue
         # channels
-        (b, g, r) = cv2.split(image.astype("float32"))
+        seq_length = seq.shape[0]
+        for i in range(seq_length):
+            (b, g, r) = cv2.split(seq[i].astype("float32"))
 
-        # subtract the means for each channel
-        r -= self.r_mean
-        g -= self.g_mean
-        b -= self.b_mean
+            # subtract the means for each channel
+            r -= self.r_mean
+            g -= self.g_mean
+            b -= self.b_mean
+
+            seq[i] = cv2.merge([b, g, r])
 
         # merge the channels back together and return the image
-        return cv2.merge([b, g, r])
+        return seq
