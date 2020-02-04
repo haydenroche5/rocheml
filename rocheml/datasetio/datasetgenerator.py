@@ -13,6 +13,7 @@ class DatasetGenerator:
                  aug=None,
                  binarize=True,
                  classes=2,
+                 limit=None,
                  shuffle=False):
         # store the batch size, preprocessors, and data augmentor,
         # whether or not the labels should be binarized, along with
@@ -28,7 +29,11 @@ class DatasetGenerator:
         # open the HDF5 database for reading and determine the total
         # number of entries in the database
         self.db = h5py.File(db_file_path, "r")
-        self.num_features = self.db['label'].shape[0]
+
+        if limit:
+            self.num_features = limit
+        else:
+            self.num_features = self.db['label'].shape[0]
 
         self.idxs = np.arange(0, self.num_features, self.batch_size)
         if self.shuffle:
