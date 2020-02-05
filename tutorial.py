@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 # Load the jpg file into a numpy array
-img = cv2.imread('satya.jpg')
+img = cv2.imread('headshot_square.png')
 size = img.shape
 
 # Find all facial features in all the faces in the image
@@ -103,8 +103,8 @@ for i, p in enumerate(face_pts):
     cv2.putText(img, str(i), (int(p[0]), int(p[1]) - 5),
                 cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1)
 
-p1 = (int(face_landmarks_list['nose_tip'][2][0]),
-      int(face_landmarks_list['nose_tip'][2][1]))
+p1 = (int(face_landmarks_list['nose_bridge'][3][0]),
+      int(face_landmarks_list['nose_bridge'][3][1]))
 p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
 
 cv2.line(img, p1, p2, (255, 0, 0), 2)
