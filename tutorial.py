@@ -9,6 +9,7 @@ size = img.shape
 
 # Find all facial features in all the faces in the image
 face_landmarks_list = face_recognition.face_landmarks(img)[0]
+outer_face_pts = face_landmarks_list['chin'][2:15]
 inner_face_pts = []
 inner_face_pts.extend(face_landmarks_list['left_eyebrow'])
 inner_face_pts.extend(face_landmarks_list['right_eyebrow'])
@@ -16,44 +17,45 @@ inner_face_pts.extend(face_landmarks_list['nose_bridge'])
 inner_face_pts.extend(face_landmarks_list['nose_tip'])
 inner_face_pts.append(face_landmarks_list['top_lip'][0])
 inner_face_pts.append(face_landmarks_list['top_lip'][7])
-outer_face_pts = face_landmarks_list['chin'][2:15]
 face_pts = np.array(outer_face_pts + inner_face_pts, dtype='double')
 
 # Based on http://aifi.isr.uc.pt/Downloads/OpenGL/glAnthropometric3DModel.cpp.
+model_chin_pts = [(-7.308957, 0.913869, -6.76343),
+                  (-6.775290, -0.730814, -6.776229),
+                  (-5.665918, -3.286078, -5.740479),
+                  (-5.011779, -4.876396, -5.715469),
+                  (-4.056931, -5.947019, -5.1272009999999995),
+                  (-1.833492, -7.056977, -2.7021549999999994),
+                  (0.000000, -7.415691, -2.692996),
+                  (1.833492, -7.056977, -2.7021549999999994),
+                  (4.056931, -5.947019, -5.1272009999999995),
+                  (5.011779, -4.876396, -5.715469),
+                  (5.665918, -3.286078, -5.740479),
+                  (6.775290, -0.730814, -6.776229),
+                  (7.308957, 0.913869, -6.76343)]
 model_left_eyebrow_pts = [
-    (-6.825897, 6.760612, 4.402142),
-    (-6.137002, 7.271266, 5.200823),
-    (-4.861131, 7.878672, 6.601275),
-    (-2.533424, 7.878085, 7.451034),
-    (-1.330353, 7.122144, 6.903745),
+    (-6.825897, 6.760612, -2.361287999999999),
+    (-6.137002, 7.271266, -1.5626069999999999),
+    (-4.861131, 7.878672, -0.16215499999999938),
+    (-2.533424, 7.878085, 0.6876040000000003),
+    (-1.330353, 7.122144, 0.1403150000000002),
 ]
-model_right_eyebrow_pts = [(1.330353, 7.122144, 6.903745),
-                           (2.533424, 7.878085, 7.451034),
-                           (4.861131, 7.878672, 6.601275),
-                           (6.137002, 7.271266, 5.200823),
-                           (6.825897, 6.760612, 4.402142)]
-model_nose_bridge_pts = [(0, 5.862829, 7.65405), (0, 4.547349, 6.66534633),
-                         (0, 3.231869, 5.67664267), (0, 1.916389, 4.687939)]
-model_nose_tip_pts = [(-1.930245, 0.424351, 5.914376),
-                      (-0.746313, 0.348381, 6.263227),
-                      (0.000000, 0.000000, 6.763430),
-                      (0.746313, 0.348381, 6.263227),
-                      (1.930245, 0.424351, 5.914376)]
-model_left_lip_corner_pt = (-2.774015, -2.080775, 5.048531)
-model_right_lip_corner_pt = (2.774015, -2.080775, 5.048531)
-model_chin_pts = [(-7.308957, 0.913869, 0.000000),
-                  (-6.775290, -0.730814, -0.012799),
-                  (-5.665918, -3.286078, 1.022951),
-                  (-5.011779, -4.876396, 1.047961),
-                  (-4.056931, -5.947019, 1.636229),
-                  (-1.833492, -7.056977, 4.061275),
-                  (0.000000, -7.415691, 4.070434),
-                  (1.833492, -7.056977, 4.061275),
-                  (4.056931, -5.947019, 1.636229),
-                  (5.011779, -4.876396, 1.047961),
-                  (5.665918, -3.286078, 1.022951),
-                  (6.775290, -0.730814, -0.012799),
-                  (7.308957, 0.913869, 0.000000)]
+model_right_eyebrow_pts = [(1.330353, 7.122144, 0.1403150000000002),
+                           (2.533424, 7.878085, 0.6876040000000003),
+                           (4.861131, 7.878672, -0.16215499999999938),
+                           (6.137002, 7.271266, -1.5626069999999999),
+                           (6.825897, 6.760612, -2.361287999999999)]
+model_nose_bridge_pts = [(0, 5.862829, 0.8906200000000002),
+                         (0, 4.547349, -0.0980836699999994),
+                         (0, 3.231869, -1.08678733),
+                         (0, 1.916389, -2.0754909999999995)]
+model_nose_tip_pts = [(-1.930245, 0.424351, -0.8490539999999998),
+                      (-0.746313, 0.348381, -0.500203),
+                      (0.000000, 0.000000, 0.0),
+                      (0.746313, 0.348381, -0.500203),
+                      (1.930245, 0.424351, -0.8490539999999998)]
+model_left_lip_corner_pt = (-2.774015, -2.080775, -1.714899)
+model_right_lip_corner_pt = (2.774015, -2.080775, -1.714899)
 
 model_inner_face_pts = []
 model_inner_face_pts.extend(model_left_eyebrow_pts)
@@ -63,13 +65,9 @@ model_inner_face_pts.extend(model_nose_tip_pts)
 model_inner_face_pts.append(model_left_lip_corner_pt)
 model_inner_face_pts.append(model_right_lip_corner_pt)
 model_outer_face_pts = model_chin_pts
-# model_face_pts = np.array(model_outer_face_pts + model_inner_face_pts,
-#                           dtype='double')
-combined_list = model_outer_face_pts + model_inner_face_pts
-new_list = []
-for pt in combined_list:
-    new_list.append((pt[0], pt[1], pt[2] - 6.763430))
-model_face_pts = np.array(new_list, dtype='double')
+model_face_pts = np.array(model_outer_face_pts + model_inner_face_pts,
+                          dtype='double')
+
 # x = [point[0] for point in new_list]
 # y = [point[1] for point in new_list]
 # z = [point[2] for point in new_list]
