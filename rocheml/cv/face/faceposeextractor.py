@@ -60,6 +60,7 @@ class FacePoseExtractor:
                                              dtype='double')
 
     def get_face_poses(self, img):
+        camera_matrix = self.get_camera_matrix(img)
         face_landmarks_list = face_recognition.face_landmarks(img)
         whole_face_pts_list = []
         inner_face_pts_list = []
@@ -87,14 +88,14 @@ class FacePoseExtractor:
                  self.model_whole_face_pts,
                  whole_face_pts,
                  camera_matrix,
-                 dist_coeffs,
+                 np.zeros((4, 1)),
                  flags=cv2.SOLVEPNP_ITERATIVE)
             (_, inner_face_rotation_vector,
              inner_face_translation_vector) = cv2.solvePnP(
                  self.model_inner_face_pts,
                  inner_face_pts,
                  camera_matrix,
-                 dist_coeffs,
+                 np.zeros((4, 1)),
                  flags=cv2.SOLVEPNP_ITERATIVE)
 
             return_vectors.append({
@@ -111,8 +112,7 @@ class FacePoseExtractor:
 
         return poses
 
-    def draw_pose_lines(self, img):
-        poses = self.get_face_poses(img)
+    def get_camera_matrix(self, img):
         height = img.shape[0]
         width = img.shape[1]
         focal_length = width
@@ -120,13 +120,18 @@ class FacePoseExtractor:
         camera_matrix = np.array([[focal_length, 0, center[0]],
                                   [0, focal_length, center[1]], [0, 0, 1]],
                                  dtype='double')
-        dist_coeffs = np.zeros((4, 1))
+
+        return camera_matrix
+
+    def draw_pose_lines(self, img):
+        poses = self.get_face_poses(img)
+        camera_matrix = self.get_camera_matrix(img)
         for pose in poses:
             (nose_end_point2D,
              jacobian) = cv2.projectPoints(np.array([
                  (0.0, 0.0, 1000.0)
              ]), pose['whole']['rotation'], pose['whole']['translation'],
-                                           camera_matrix, dist_coeffs)
+                                           camera_matrix, np.zeros((4, 1)))
 
             p1 = (int(pose['nose_point'][0]), int(pose['nose_point'][1]))
             p2 = (int(nose_end_point2D[0][0][0]),
