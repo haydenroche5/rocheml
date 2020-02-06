@@ -98,7 +98,7 @@ class FacePoseExtractor:
                  np.zeros((4, 1)),
                  flags=cv2.SOLVEPNP_ITERATIVE)
 
-            return_vectors.append({
+            poses.append({
                 'whole': {
                     'rotation': whole_face_rotation_vector,
                     'translation': whole_face_translation_vector
