@@ -78,7 +78,7 @@ class FacePoseExtractor:
                 np.array(outer_face_pts + inner_face_pts, dtype='double'))
             inner_face_pts_list.append(np.array(inner_face_pts,
                                                 dtype='double'))
-            nose_pts_list.append(face_landmarks['nose_bridge'][3])
+            nose_pts_list.append(face_landmarks['nose_tip'][2])
 
         poses = []
         for whole_face_pts, inner_face_pts, nose_pt in zip(
