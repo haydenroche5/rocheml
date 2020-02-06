@@ -107,7 +107,7 @@ class FacePoseExtractor:
                     'rotation': inner_face_rotation_vector,
                     'translation': inner_face_translation_vector
                 },
-                'nose_point': model_nose_bridge_pts
+                'nose_point': nose_pt
             })
 
         return poses
