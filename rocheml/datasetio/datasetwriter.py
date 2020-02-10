@@ -1,56 +1,46 @@
 import os
 import h5py
-
+import numpy as np
 
 class DatasetWriter:
-    def __init__(self, num_rows, cols, hdf_file_path, buffer_size,
+    def __init__(self, dataset_name, num_rows, dtypes, hdf_file_path, buffer_size,
                  force=False):
         if not force and os.path.exists(hdf_file_path):
             raise Exception(
                 'DatasetWriter::__init__: {} already exists.'.format(
                     hdf_file_path))
         self.hdf_file_path = hdf_file_path
-        self.db = h5py.File(self.hdf_file_path, 'w')
-        self.datasets = {}
-        self.dataset_idxs = {}
-        for col in cols:
-            dims_with_rows = (num_rows, ) + col['dims']
-            dataset = self.db.create_dataset(col['name'],
-                                             dims_with_rows,
-                                             dtype=col['dtype'])
-            self.datasets[col['name']] = dataset
-            self.dataset_idxs[col['name']] = 0
+        self.db = h5py.File(hdf_file_path, 'w')
+        self.dtypes = dtypes
+        self.dataset = self.db.create_dataset(dataset_name, (num_rows,), dtype=dtypes)
 
-        self.buffer = []
         if buffer_size <= 0:
             raise Exception(
                 'DatasetWriter::__init__: Buffer size must be > 0.')
         self.buffer_size = buffer_size
+        self.buffer = np.recarray((buffer_size,), dtype=dtypes)
+        self.buffer_idx = 0
+        self.dataset_idx = 0
 
     def add(self, row):
-        # Don't add the row if the columns don't match the schema.
-        if set(row.keys()) != set(self.datasets.keys()):
-            raise Exception(
-                'DatasetWriter::add: Row columns don\'t match dataset columns. Row columns: {}. Dataset columns {}.'
-                .format(row.keys(), self.datasets.keys()))
-
-        self.buffer.append(row)
         # Check if the buffer is full and, if so, flush the buffer.
-        if len(self.buffer) == self.buffer_size:
+        if self.buffer_idx == self.buffer.shape[0]:
             self.flush()
 
+        row_tuple = tuple([row[name] for name in list(self.buffer.dtype.names)])
+        self.buffer[self.buffer_idx] = row_tuple
+        self.buffer_idx += 1
+
+
+    def clear_buffer(self):
+        self.buffer_idx = 0
+        self.buffer = np.recarray((self.buffer_size,), dtype=self.dtypes)
+
     def flush(self):
-        if self.buffer:
-            for col_name, dataset in self.datasets.items():
-                num_rows = len(self.buffer)
-                curr_idx = self.dataset_idxs[col_name]
-                new_idx = self.dataset_idxs[col_name] + num_rows
-                for i, row in enumerate(self.buffer):
-                    self.datasets[col_name][curr_idx + i] = row[col_name]
-
-                self.dataset_idxs[col_name] = new_idx
-
-        self.buffer = []
+        if self.buffer_idx != 0:
+            self.dataset[self.dataset_idx:self.dataset_idx+self.buffer_size] = self.buffer[:]
+            self.dataset_idx += self.buffer_size
+            self.clear_buffer()
 
     def close(self):
         self.flush()

@@ -7,6 +7,7 @@ import h5py
 class DatasetGenerator:
     def __init__(self,
                  db_file_path,
+                 dataset_name,
                  batch_size,
                  feat_key,
                  preprocessors=None,
@@ -29,11 +30,12 @@ class DatasetGenerator:
         # open the HDF5 database for reading and determine the total
         # number of entries in the database
         self.db = h5py.File(db_file_path, "r")
+        self.dataset = self.db[dataset_name]
 
         if limit:
             self.num_features = limit
         else:
-            self.num_features = self.db['label'].shape[0]
+            self.num_features = self.dataset.shape[0]
 
         self.idxs = np.arange(0, self.num_features, self.batch_size)
         if self.shuffle:
@@ -49,8 +51,8 @@ class DatasetGenerator:
             # loop over the HDF5 dataset
             for idx in self.idxs:
                 # extract the features and labels from the HDF dataset
-                features = self.db[self.feat_key][idx:idx + self.batch_size]
-                labels = self.db['label'][idx:idx + self.batch_size]
+                features = self.dataset[idx:idx + self.batch_size][self.feat_key]
+                labels = self.dataset[idx:idx + self.batch_size]['label']
 
                 # check to see if the labels should be binarized
                 if self.binarize:

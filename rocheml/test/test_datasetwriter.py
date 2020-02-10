@@ -9,32 +9,14 @@ import random
 
 class TestDatasetWriter(unittest.TestCase):
     def setUp(self):
-        self.feat_length = 32
-        self.seq_length = 10
+        self.feat_length = 10
+        self.seq_length = 20
         self.buffer_size = 5
         self.num_rows = 100
         self.dataset_file_path = 'test.hdf'
 
-        self.cols = [
-            {
-                'name': 'feat_seq',
-                'dims': (self.seq_length, self.feat_length),
-                'dtype': 'float'
-            },
-            {
-                'name': 'label',
-                'dims': (1, ),
-                'dtype': 'int'
-            },
-            {
-                'name': 'file',
-                'dims': (1, ),
-                'dtype': h5py.string_dtype()
-            },
-        ]
-        self.dataset_writer = DatasetWriter(self.num_rows, self.cols,
-                                            self.dataset_file_path,
-                                            self.buffer_size)
+        self.dtypes=[('feat_seq', 'float', (self.seq_length, self.feat_length)), ('label', 'int'), ('file', h5py.string_dtype())]
+        self.dataset_writer = DatasetWriter('test', self.num_rows, self.dtypes, self.dataset_file_path, self.buffer_size)
         self.taken_files = set()
 
     def tearDown(self):
@@ -65,15 +47,25 @@ class TestDatasetWriter(unittest.TestCase):
 
         return {'feat_seq': features, 'label': label, 'file': file}
 
+    def check_equality(self, expected_row, actual_row):
+        expected_row_tuple = tuple([expected_row[name] for name in [dtype[0] for dtype in self.dtypes]])
+        actual_row_tuple = tuple(actual_row)
+        
+        for expected_val, actual_val in zip(expected_row_tuple, actual_row_tuple):
+            if isinstance(expected_val, np.ndarray):
+                if not np.array_equal(expected_val, actual_val):
+                    return False
+            else:
+                if expected_val != actual_val:
+                    return False
+
+        return True
+
     def check_db(self, expected_rows):
         db = h5py.File(self.dataset_file_path, 'r')
-        for col in self.cols:
-            for expected_row, db_value in zip(expected_rows, db[col['name']]):
-                if col['name'] == 'feat_seq':
-                    self.assertEqual(expected_row[col['name']].tolist(),
-                                     db_value.tolist())
-                else:
-                    self.assertEqual(expected_row[col['name']], db_value)
+        actual_rows = db['test']
+        for expected_row, actual_row in zip(expected_rows, actual_rows):
+            self.assertTrue(self.check_equality(expected_row, actual_row))
 
     def test_empty(self):
         expected_rows = self.initialize_expected_rows()

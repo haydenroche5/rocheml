@@ -16,27 +16,10 @@ class TestDatasetGenerator(unittest.TestCase):
         self.buffer_size = 5
         self.num_rows = 50
         self.dataset_file_path = 'test.hdf'
+        self.dataset_name = 'test'
 
-        self.cols = [
-            {
-                'name': 'feat_seq',
-                'dims': (self.seq_length, self.feat_length),
-                'dtype': 'float'
-            },
-            {
-                'name': 'label',
-                'dims': (1, ),
-                'dtype': 'int'
-            },
-            {
-                'name': 'file',
-                'dims': (1, ),
-                'dtype': h5py.string_dtype()
-            },
-        ]
-        self.dataset_writer = DatasetWriter(self.num_rows, self.cols,
-                                            self.dataset_file_path,
-                                            self.buffer_size)
+        self.dtypes=[('feat_seq', 'float', (self.seq_length, self.feat_length)), ('label', 'int'), ('file', h5py.string_dtype())]
+        self.dataset_writer = DatasetWriter('test', self.num_rows, self.dtypes, self.dataset_file_path, self.buffer_size)
         self.taken_files = set()
 
     def tearDown(self):
@@ -69,6 +52,7 @@ class TestDatasetGenerator(unittest.TestCase):
 
     def check_db(self, batch_size, expected_rows, shuffle):
         gen = DatasetGenerator(self.dataset_file_path,
+                               self.dataset_name,
                                batch_size,
                                'feat_seq',
                                binarize=False,
@@ -78,12 +62,11 @@ class TestDatasetGenerator(unittest.TestCase):
         for features, labels in gen.generator(1):
             gen_features.extend(features.tolist())
             gen_labels.extend(labels.tolist())
-
         self.assertEqual(len(expected_rows), len(gen_labels))
 
         for gen_label, gen_features in zip(gen_labels, gen_features):
             result = [
-                row for row in expected_rows if row['label'] == gen_label[0]
+                row for row in expected_rows if row['label'] == gen_label
                 and np.array_equal(row['feat_seq'], gen_features)
             ]
             self.assertTrue(result)
