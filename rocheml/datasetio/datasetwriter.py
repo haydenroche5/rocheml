@@ -23,10 +23,13 @@ class DatasetWriter:
         self.dataset_idx = 0
 
     def add(self, row):
+        if self.dataset_idx == len(self.dataset):
+            print(f'Dataset full. Not adding request row: {row}.')
+            return
+
         # Check if the buffer is full and, if so, flush the buffer.
         if self.buffer_idx == self.buffer.shape[0]:
             self.flush()
-
         row_tuple = tuple([row[name] for name in list(self.buffer.dtype.names)])
         self.buffer[self.buffer_idx] = row_tuple
         self.buffer_idx += 1
@@ -38,8 +41,8 @@ class DatasetWriter:
 
     def flush(self):
         if self.buffer_idx != 0:
-            self.dataset[self.dataset_idx:self.dataset_idx+self.buffer_size] = self.buffer[:]
-            self.dataset_idx += self.buffer_size
+            self.dataset[self.dataset_idx:self.dataset_idx+self.buffer_idx] = self.buffer[0:self.buffer_idx]
+            self.dataset_idx += self.buffer_idx
             self.clear_buffer()
 
     def close(self):
