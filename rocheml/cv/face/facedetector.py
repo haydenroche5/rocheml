@@ -40,8 +40,9 @@ class FaceDetector:
         x2 = min([x2 + self.margin, max_x])
         y2 = min([y2 + self.margin, max_y])
         face = img[y1:y2, x1:x2]
+        new_box = [[x1, y1], [x2, y2]]
         
-        return face
+        return face, new_box
 
     def filter_faces(self, frame_data):
         faces = {}
@@ -96,7 +97,7 @@ class FaceDetector:
         for i in range(num_frames):
             success, img = vc.read()
             if success:
-                imgs.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                imgs.append(img)
             else:
                 print('FaceDetector::detect: cv2::VideoCapture::read call failed.')
                 return []
@@ -140,20 +141,18 @@ class FaceDetector:
                 if face_prob < self.prob_threshold:
                     continue
                
-                face_cropped = self.crop_face(img, face_box)
+                face_cropped, new_box = self.crop_face(img, face_box)
                 found, idx = search_past_faces(face_box, 0.5)
                 
                 if found:
                     past_faces[idx]['box'] = face_box
-                    face_data.append({'id': past_faces[idx]['id'], 'box': face_box, 'prob': face_prob, 'landmarks': face_landmarks, 'img': face_cropped})
+                    face_data.append({'id': past_faces[idx]['id'], 'box': new_box, 'prob': face_prob, 'landmarks': face_landmarks, 'img': face_cropped})
                 else:
                     past_faces.append({'box': face_box , 'id': face_id})
-                    face_data.append({'id': face_id, 'box': face_box, 'prob': face_prob, 'landmarks': face_landmarks, 'img': face_cropped})
+                    face_data.append({'id': face_id, 'box': new_box, 'prob': face_prob, 'landmarks': face_landmarks, 'img': face_cropped})
                     face_id += 1
 
             frame_data.append({'frame': frame, 'faces': face_data, 'contrast_boosted': contrast_boosted})
 
-
-                    
         return frame_data if not filt else self.filter_faces(frame_data) 
                 
