@@ -1,4 +1,3 @@
-from tensorflow.keras.utils import to_categorical
 import numpy as np
 import h5py
 
@@ -12,18 +11,13 @@ class DatasetGenerator:
                  feat_key,
                  preprocessors=None,
                  aug=None,
-                 binarize=True,
                  classes=2,
                  limit=None,
                  shuffle=False):
-        # store the batch size, preprocessors, and data augmentor,
-        # whether or not the labels should be binarized, along with
-        # the total number of classes
         self.batch_size = batch_size
         self.feat_key = feat_key
         self.preprocessors = preprocessors
         self.aug = aug
-        self.binarize = binarize
         self.classes = classes
         self.shuffle = shuffle
 
@@ -51,14 +45,11 @@ class DatasetGenerator:
             # loop over the HDF5 dataset
             for idx in self.idxs:
                 # extract the features and labels from the HDF dataset
-                features = self.dataset[idx:idx + self.batch_size][self.feat_key]
+                features = self.dataset[idx:idx +
+                                        self.batch_size][self.feat_key]
                 labels = self.dataset[idx:idx + self.batch_size]['label']
 
-                # check to see if the labels should be binarized
-                if self.binarize:
-                    labels = to_categorical(labels, self.classes)
-
-            # check to see if our preprocessors are not None
+                # check to see if our preprocessors are not None
                 if self.preprocessors is not None:
                     # initialize the list of processed features
                     proc_features = []

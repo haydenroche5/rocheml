@@ -18,8 +18,12 @@ class TestDatasetGenerator(unittest.TestCase):
         self.dataset_file_path = 'test.hdf'
         self.dataset_name = 'test'
 
-        self.dtypes=[('feat_seq', 'float', (self.seq_length, self.feat_length)), ('label', 'int'), ('file', h5py.string_dtype())]
-        self.dataset_writer = DatasetWriter('test', self.num_rows, self.dtypes, self.dataset_file_path, self.buffer_size)
+        self.dtypes = [('feat_seq', 'float', (self.seq_length,
+                                              self.feat_length)),
+                       ('label', 'int'), ('file', h5py.string_dtype())]
+        self.dataset_writer = DatasetWriter('test', self.num_rows, self.dtypes,
+                                            self.dataset_file_path,
+                                            self.buffer_size)
         self.taken_files = set()
 
     def tearDown(self):
@@ -55,7 +59,6 @@ class TestDatasetGenerator(unittest.TestCase):
                                self.dataset_name,
                                batch_size,
                                'feat_seq',
-                               binarize=False,
                                shuffle=shuffle)
         gen_features = []
         gen_labels = []
