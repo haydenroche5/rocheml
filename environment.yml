@@ -1,0 +1,9 @@
+name: rocheml
+channels:
+  - defaults
+dependencies:
+  - h5py
+  - python=3.6
+  - twine
+prefix: /home/hayden/anaconda3/envs/rocheml
+
