@@ -12,7 +12,7 @@ class ContrastPreprocessor:
     def preprocess(self, imgs):
         preprocessed_imgs = []
 
-        if self.adapative:
+        if self.adaptive:
             for img in imgs:
                 gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
                 brightness = np.mean(gray_img)
